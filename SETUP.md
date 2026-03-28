@@ -15,7 +15,7 @@ cp .env.example .env
 ### 2. Add your credentials
 Open `.env` and paste your team credentials from your card:
 ```
-SHOPIFY_ACCESS_TOKEN=shpat_your_token_here
+SHOPIFY_ACCESS_TOKEN=shpua_your_token_here
 SHOPIFY_STORE_URL=gzh-XX.myshopify.com
 ```
 
@@ -61,7 +61,7 @@ Go to http://localhost:3000 — you should see a working dashboard with your sto
 | "Module not found" | Run `npm run setup` again |
 | Backend won't start | Check Python 3.10+: `python3 --version` |
 | No data on dashboard | Wait 30s for initial sync, or run `npm run sync` |
-| "Invalid API key" | Check SHOPIFY_ACCESS_TOKEN in .env matches your card |
+| "Invalid API key" / 401 | Your token starts with `shpua_` — NOT `shpss_` (that's the secret, won't work) |
 | Port 3000 in use | Kill other dev servers: `lsof -i :3000` then `kill <PID>` |
 | Port 8000 in use | Kill other python processes: `lsof -i :8000` then `kill <PID>` |
 
