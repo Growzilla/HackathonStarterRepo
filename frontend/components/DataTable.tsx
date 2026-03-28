@@ -6,6 +6,7 @@ export interface Column {
   key: string
   label: string
   sortable?: boolean
+  tooltip?: string
   render?: (value: any, row: any) => React.ReactNode
 }
 
@@ -52,6 +53,7 @@ export default function DataTable({
                     col.sortable && 'cursor-pointer select-none hover:text-text-secondary'
                   )}
                   onClick={() => col.sortable && handleSort(col.key)}
+                  title={col.tooltip}
                 >
                   <div className="flex items-center gap-1">
                     {col.label}

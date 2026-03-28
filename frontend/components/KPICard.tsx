@@ -7,11 +7,12 @@ interface KPICardProps {
   change?: number
   prefix?: string
   suffix?: string
+  tooltip?: string
 }
 
-export default function KPICard({ title, value, change, prefix, suffix }: KPICardProps) {
+export default function KPICard({ title, value, change, prefix, suffix, tooltip }: KPICardProps) {
   return (
-    <div className="bg-surface-1 border border-border rounded-lg p-4">
+    <div className="bg-surface-1 border border-border rounded-lg p-4" title={tooltip}>
       <p className="text-xs text-text-tertiary mb-2">{title}</p>
       <div className="flex items-baseline gap-1">
         {prefix && <span className="text-lg text-text-secondary">{prefix}</span>}

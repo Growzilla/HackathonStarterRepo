@@ -2,7 +2,7 @@ import React from 'react'
 import { cn } from '../../lib/utils'
 
 interface TabsProps {
-  tabs: { key: string; label: string }[]
+  tabs: { key: string; label: string; tooltip?: string }[]
   active: string
   onChange: (key: string) => void
 }
@@ -14,6 +14,7 @@ export default function Tabs({ tabs, active, onChange }: TabsProps) {
         <button
           key={tab.key}
           onClick={() => onChange(tab.key)}
+          title={tab.tooltip}
           className={cn(
             'px-3 py-2 text-sm transition-colors duration-150 ease-out border-b-2 -mb-px',
             active === tab.key
