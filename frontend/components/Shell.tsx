@@ -55,6 +55,16 @@ const navItems = [
     ),
   },
   {
+    href: '/purchase-orders',
+    label: 'Purchase Orders',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <rect x="2" y="2" width="12" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
+        <path d="M5 6h6M5 8.5h4M5 11h2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
     href: '/segments',
     label: 'Segments',
     icon: (
