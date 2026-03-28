@@ -53,6 +53,19 @@ class POLineItem(Base):
     total_cost: Mapped[float] = mapped_column(Float, default=0.0)
 
 
+class Discount(Base):
+    __tablename__ = "discounts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    code: Mapped[str] = mapped_column(String, unique=True)
+    percentage: Mapped[float] = mapped_column(Float, default=0.0)
+    product_id: Mapped[str | None] = mapped_column(String, nullable=True)
+    product_title: Mapped[str] = mapped_column(String, default="")
+    created_by: Mapped[str] = mapped_column(String, default="Ron")
+    status: Mapped[str] = mapped_column(String, default="active")  # active, reverted
+    created_at: Mapped[str] = mapped_column(String, default="")
+
+
 class AgentState(Base):
     __tablename__ = "agent_states"
 

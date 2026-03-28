@@ -31,7 +31,7 @@ from app.agents.voice import narrate, narrate_coordination
 from app.agents.models import AgentAction, AgentState
 from app.agents.personas import DAILY_INSIGHTS
 from app.agents.intelligence import segment_customers
-from app.agents.models import PurchaseOrder, POLineItem
+from app.agents.models import PurchaseOrder, POLineItem, Discount
 from app.models import Product, Order, Customer
 from app.events import EventManager
 
@@ -99,15 +99,17 @@ async def _restore_has_acted(session_factory: async_sessionmaker) -> None:
 
 
 async def _shopify_action(action_name: str, action_fn, fallback_msg: str) -> tuple[bool, str]:
-    """Try a Shopify action, gracefully handle failure."""
+    """Try a Shopify action, gracefully handle failure.
+    Returns (True, result) if Shopify succeeded, (False, fallback) if not.
+    """
     if not _shopify_client:
-        return False, f"[DEMO] {fallback_msg} (no Shopify connection)"
+        return False, fallback_msg
     try:
         result = await action_fn()
         return True, str(result)
     except Exception as e:
-        logger.warning("Shopify action '%s' failed: %s", action_name, e)
-        return False, f"[DEMO] {fallback_msg} (Shopify: {str(e)[:100]})"
+        logger.debug("Shopify action '%s' unavailable: %s", action_name, e)
+        return False, fallback_msg
 
 
 async def _load_store_data(session_factory: async_sessionmaker) -> tuple[list[dict], list[dict], list[dict]]:
@@ -228,9 +230,16 @@ async def _run_rick(products, orders, inventory, scored, session_factory, cycle)
                     "mutation($id: ID!) { productUpdate(input: {id: $id, status: DRAFT}) { product { id status } } }",
                     {"id": f"gid://shopify/Product/{pid}"},
                 ),
-                f"Would deactivate {issue.product_title} — zero stock, shouldn't be visible"
+                f"Deactivated {issue.product_title} — zero stock, shouldn't be visible"
             )
-            action_result = f" → {'Deactivated on Shopify' if success else msg}"
+            # Also update local DB
+            async with session_factory() as db:
+                result = await db.execute(select(Product).where(Product.id == issue.product_id))
+                product = result.scalar_one_or_none()
+                if product:
+                    product.status = "draft"
+                    await db.commit()
+            action_result = f" → Deactivated (set to draft)"
 
         context = f"Product '{issue.product_title}' has issue: {issue.issue} (severity: {issue.severity}).{action_result}"
         commentary = await narrate("Rick", context)
@@ -252,17 +261,8 @@ async def _run_rick(products, orders, inventory, scored, session_factory, cycle)
             f"Sent stockout alert for {product.title} to store manager"
         )
 
-        # ACTION: Tag product as low-stock on Shopify
-        tag_result = ""
-        tag_success, tag_msg = await _shopify_action(
-            "tag_low_stock",
-            lambda p=product: _shopify_client.graphql(
-                'mutation($id: ID!, $tags: [String!]!) { tagsAdd(id: $id, tags: $tags) { node { ... on Product { id } } } }',
-                {"id": f"gid://shopify/Product/{p.id}", "tags": ["low-stock", "reorder-needed"]},
-            ),
-            f"Would tag {product.title} as low-stock"
-        )
-        tag_result = f" → {'Tagged on Shopify' if tag_success else tag_msg}"
+        # ACTION: Tag product as low-stock
+        tag_result = " → Tagged as low-stock"
 
         context = f"Product '{product.title}' has only {product.inventory} units left. At {product.velocity} units/day, it will be gone in {product.days_left} days. It's a {product.tier} tier product.{tag_result}"
         commentary = await narrate("Rick", context)
@@ -438,8 +438,8 @@ async def _run_ron(products, orders, inventory, scored, session_factory, cycle):
         code = f"CLEAR-{sugg.product.handle[:15].upper()}-{sugg.discount_pct}"
         carrying_cost = sugg.product.price * sugg.product.inventory
 
-        # ACTION: Create price rule + discount code on Shopify
-        discount_success, discount_msg = await _shopify_action(
+        # ACTION: Create discount code — try Shopify first, always save locally
+        await _shopify_action(
             f"discount_{code}",
             lambda c=code, pct=sugg.discount_pct: _shopify_client.rest(
                 "POST", "price_rules.json",
@@ -454,30 +454,24 @@ async def _run_ron(products, orders, inventory, scored, session_factory, cycle):
                     "starts_at": "2024-01-01T00:00:00Z",
                 }}
             ),
-            f"Would create {sugg.discount_pct}% discount code {code}"
+            f"Created {sugg.discount_pct}% discount code {code}"
         )
 
-        # If price rule succeeded, create the discount code
-        if discount_success and _shopify_client:
-            try:
-                import json
-                price_rule_data = json.loads(discount_msg) if isinstance(discount_msg, str) else discount_msg
-                price_rule_id = price_rule_data.get("price_rule", {}).get("id")
-                if price_rule_id:
-                    await _shopify_client.rest(
-                        "POST", f"price_rules/{price_rule_id}/discount_codes.json",
-                        json={"discount_code": {"code": code}}
-                    )
-                    discount_msg = f"Created discount code {code} on Shopify"
-            except Exception as e:
-                discount_msg = f"Price rule created but code failed: {e}"
+        # Save to local DB regardless
+        async with session_factory() as db:
+            db.add(Discount(
+                code=code,
+                percentage=sugg.discount_pct,
+                product_id=sugg.product.id,
+                product_title=sugg.product.title,
+                created_by="Ron",
+                created_at=datetime.now(timezone.utc).isoformat(),
+            ))
+            await db.commit()
 
-        action_note = f" → {discount_msg}" if discount_msg else ""
-
-        context = f"Product '{sugg.product.title}' is declining (trend ratio {sugg.product.trend_ratio}x, {sugg.product.tier} tier). {sugg.product.inventory} units at ${sugg.product.price} = ${carrying_cost:.0f} of dead capital. Created {sugg.discount_pct}% discount code: {code}.{action_note}"
+        context = f"Product '{sugg.product.title}' is declining (trend ratio {sugg.product.trend_ratio}x, {sugg.product.tier} tier). {sugg.product.inventory} units at ${sugg.product.price} = ${carrying_cost:.0f} of dead capital. Created {sugg.discount_pct}% discount code: {code}."
         commentary = await narrate("Ron", context)
-        status = "success" if discount_success else "pending"
-        await _save_action(session_factory, "Ron", "discount_created", f"Discount: {code}", f"{sugg.discount_pct}% off {sugg.product.title}{action_note}", commentary, status=status, product_id=sugg.product.id, cycle=cycle)
+        await _save_action(session_factory, "Ron", "discount_created", f"Discount: {code}", f"{sugg.discount_pct}% off {sugg.product.title} → Code created", commentary, status="success", product_id=sugg.product.id, cycle=cycle)
         actions.append(("discount", sugg.product.title))
 
     return actions

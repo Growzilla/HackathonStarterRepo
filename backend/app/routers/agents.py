@@ -6,7 +6,7 @@ from sqlalchemy import select, desc, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.agents.models import AgentAction, AgentState
+from app.agents.models import AgentAction, AgentState, Discount
 from app.agents.orchestrator import run_cycle
 from app.database import async_session_factory
 
@@ -100,6 +100,25 @@ async def get_agent_stats(db: AsyncSession = Depends(get_db)):
         "byAgent": agent_counts,
         "byType": type_counts,
     }
+
+
+@router.get("/discounts")
+async def get_discounts(db: AsyncSession = Depends(get_db)):
+    """Get all discount codes created by Ron."""
+    result = await db.execute(select(Discount).order_by(desc(Discount.id)))
+    return [
+        {
+            "id": d.id,
+            "code": d.code,
+            "percentage": d.percentage,
+            "productId": d.product_id,
+            "productTitle": d.product_title,
+            "createdBy": d.created_by,
+            "status": d.status,
+            "createdAt": d.created_at,
+        }
+        for d in result.scalars().all()
+    ]
 
 
 @router.post("/trigger")
