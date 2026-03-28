@@ -8,6 +8,7 @@ import DataTable, { Column } from '../components/DataTable'
 import LiveFeed from '../components/LiveFeed'
 import AgentCard from '../components/AgentCard'
 import ActionLog from '../components/ActionLog'
+import AgentDialogue from '../components/AgentDialogue'
 import DailyInsight from '../components/DailyInsight'
 import { useProducts } from '../hooks/useProducts'
 import { useOrders } from '../hooks/useOrders'
@@ -254,10 +255,10 @@ export default function AutopilotPage() {
               ))}
             </div>
             <Card
-              title="Activity Feed"
+              title="Agent Dialogue"
               subtitle={`${stats?.totalActions || actions.length} actions across ${stats?.currentCycle || 0} cycles`}
             >
-              <ActionLog actions={actions} maxItems={20} />
+              <AgentDialogue actions={actions} maxItems={30} />
             </Card>
           </div>
         )}
@@ -306,7 +307,7 @@ export default function AutopilotPage() {
                 <LiveFeed maxEvents={30} />
               </Card>
               <Card title="Agent Reactions" className="min-h-[300px]">
-                <ActionLog actions={actions.filter((a) => a.timestamp > new Date(Date.now() - 3600000).toISOString())} maxItems={20} />
+                <AgentDialogue actions={actions.filter((a) => a.timestamp > new Date(Date.now() - 3600000).toISOString())} maxItems={15} />
               </Card>
             </div>
           </div>
