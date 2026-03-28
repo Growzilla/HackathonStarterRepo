@@ -79,6 +79,10 @@ async def lifespan(app: FastAPI):
                     seeded = await seed_if_empty(seed_db)
                     if seeded:
                         logger.info("Seeded sample data for agent demo")
+                        from app.agents.load_fixtures import load_fixtures
+                        loaded = await load_fixtures(seed_db)
+                        if loaded:
+                            logger.info("Loaded agent action fixtures")
 
     # Start order simulator
     simulator_task = None

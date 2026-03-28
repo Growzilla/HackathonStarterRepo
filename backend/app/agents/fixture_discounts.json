@@ -1,0 +1,32 @@
+[
+  {
+    "id": 3,
+    "code": "CLEAR-PASTEL-TIE-DYE--40",
+    "percentage": 40.0,
+    "productId": "prod-9",
+    "productTitle": "Pastel Tie-Dye Crewneck",
+    "createdBy": "Ron",
+    "status": "active",
+    "createdAt": "2026-03-28T07:39:57.434664+00:00"
+  },
+  {
+    "id": 2,
+    "code": "CLEAR-NYLON-CROSSBODY-20",
+    "percentage": 20.0,
+    "productId": "prod-15",
+    "productTitle": "Nylon Crossbody Bag",
+    "createdBy": "Ron",
+    "status": "active",
+    "createdAt": "2026-03-28T07:39:55.175034+00:00"
+  },
+  {
+    "id": 1,
+    "code": "CLEAR-RELAXED-LINEN-S-15",
+    "percentage": 15.0,
+    "productId": "prod-14",
+    "productTitle": "Relaxed Linen Shirt",
+    "createdBy": "Ron",
+    "status": "active",
+    "createdAt": "2026-03-28T07:39:52.359032+00:00"
+  }
+]
