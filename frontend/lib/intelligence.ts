@@ -44,10 +44,8 @@ export function scoreProducts(
     const orderTime = new Date(order.processed_at || order.created_at).getTime()
 
     for (const item of order.line_items) {
-      // Match line item to product by title (Shopify line items don't carry product_id)
-      const product = products.find(
-        (p) => p.title === item.title || p.variants.some((v) => v.title === item.variant_title)
-      )
+      // Match line item to product by title (not variant — S/M/L aren't unique)
+      const product = products.find((p) => p.title === item.title)
       if (!product) continue
 
       const existing = productSales.get(product.id) || { units: 0, revenue: 0, recentUnits: 0, priorUnits: 0 }

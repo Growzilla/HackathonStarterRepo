@@ -75,19 +75,11 @@ def score_products(products: list[dict], orders: list[dict], inventory: list[dic
             continue
 
         for item in (order.get("line_items") or []):
-            # Match by title
+            # Match by product title (not variant title — variants like S/M/L aren't unique)
             matched_product = None
             for p in products:
                 if p.get("title") == item.get("title"):
                     matched_product = p
-                    break
-                variants = p.get("variants") or []
-                if isinstance(variants, list):
-                    for v in variants:
-                        if isinstance(v, dict) and v.get("title") == item.get("variant_title"):
-                            matched_product = p
-                            break
-                if matched_product:
                     break
             if not matched_product:
                 continue

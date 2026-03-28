@@ -153,11 +153,11 @@ async def seed_if_empty(db: AsyncSession) -> bool:
 
         # Weekday gets more orders than weekend
         is_weekend = order_date.weekday() >= 5
-        base_orders = random.randint(3, 6) if not is_weekend else random.randint(1, 3)
+        base_orders = random.randint(6, 12) if not is_weekend else random.randint(3, 6)
 
         # Recent days get more orders (growing store)
         if day_offset <= 7:
-            base_orders = int(base_orders * 1.5)
+            base_orders = int(base_orders * 2)
 
         for _ in range(base_orders):
             order_num += 1
@@ -166,10 +166,16 @@ async def seed_if_empty(db: AsyncSession) -> bool:
             # Pick products weighted by velocity
             weights = [p.get("velocity_weight", 1.0) for p in active_products]
 
-            # For declining products: only sell them in older period (8-21 days ago)
+            # For declining products: strong sales 14-21 days ago, almost nothing in last 7 days
             if day_offset <= 7:
                 weights = [
-                    w if not p.get("declining") else w * 0.05
+                    w if not p.get("declining") else 0.01
+                    for w, p in zip(weights, active_products)
+                ]
+            elif day_offset <= 14:
+                # Declining products sold well in this period (prior week)
+                weights = [
+                    w * 3.0 if p.get("declining") else w
                     for w, p in zip(weights, active_products)
                 ]
 
