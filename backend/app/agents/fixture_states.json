@@ -1,0 +1,37 @@
+[
+  {
+    "name": "Rick",
+    "status": "active",
+    "lastAction": "Stockout risk: Zip-Up Bomber Jacket",
+    "actionCount": 11,
+    "lastCycleAt": "2026-03-28T07:39:32.695529+00:00"
+  },
+  {
+    "name": "Hank",
+    "status": "active",
+    "lastAction": "Created PO-20260328-001",
+    "actionCount": 6,
+    "lastCycleAt": "2026-03-28T07:39:49.200465+00:00"
+  },
+  {
+    "name": "Ron",
+    "status": "active",
+    "lastAction": "Discount: CLEAR-PASTEL-TIE-DYE--40",
+    "actionCount": 4,
+    "lastCycleAt": "2026-03-28T07:39:59.422119+00:00"
+  },
+  {
+    "name": "Marty",
+    "status": "active",
+    "lastAction": "VIP early-access \u2192 6 Champions",
+    "actionCount": 7,
+    "lastCycleAt": "2026-03-28T08:02:31.650932+00:00"
+  },
+  {
+    "name": "Marcus",
+    "status": "active",
+    "lastAction": "Cycle 1 summary",
+    "actionCount": 4,
+    "lastCycleAt": "2026-03-28T08:02:33.424745+00:00"
+  }
+]
